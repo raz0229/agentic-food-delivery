@@ -1,0 +1,215 @@
+Case 1: Normal traffic, good weather
+------------------------------------
+Order ORD-101: 2x Zinger burger, 1x fries | prep 10m | deadline 40m | weather clear | urgent False | afternoon
+   Route A (Main Blvd): 4.0 km, normal traffic, ~10.9 min 
+   Route B (Canal Rd): 6.0 km, light traffic, ~12.0 min 
+
+>> Simple Reflex Agent
+   RULE: traffic is normal -> stay on Route A (Main Blvd)
+   Actions: Pick up order ORD-101 | Ride via Route A (Main Blvd) | Hand over order
+   Route: Route A (Main Blvd)   ETA: 20.9 min   (ON TIME)
+
+>> Model-Based Reflex Agent
+   STATE: weather=clear, status=accepted, last route=None
+   STATE: traffic model = {'Route A (Main Blvd)': 'normal', 'Route B (Canal Rd)': 'light'}
+   RULE: choose Route A (Main Blvd) (first road not jammed in model)
+   Actions: Accept order ORD-101 | Pick up food (status: picked_up) | Ride via Route A (Main Blvd) | Deliver (status: delivered)
+   Route: Route A (Main Blvd)   ETA: 20.9 min   (ON TIME)
+
+>> Goal-Based Agent
+   GOAL: deliver ORD-101 within 40 min
+     predict Route A (Main Blvd): arrive in 20.9 min -> goal met
+   Selected Route A (Main Blvd) because it achieves the goal
+   Actions: Accept order ORD-101 | Pick up food | Ride via Route A (Main Blvd) | Deliver order
+   Route: Route A (Main Blvd)   ETA: 20.9 min   (ON TIME)
+
+>> Utility-Based Agent
+   weights: {'time': 0.45, 'distance': 0.15, 'traffic': 0.2, 'cost': 0.2}
+     Route A (Main Blvd): time=20.9m dist=4.0km traffic=normal cost=Rs48 -> U=0.669
+     Route B (Canal Rd): time=22.0m dist=6.0km traffic=light cost=Rs72 -> U=0.673
+   Best utility: Route B (Canal Rd) (U=0.673)
+   Actions: Accept order ORD-101 | Pick up food | Ride via Route B (Canal Rd) | Deliver order
+   Route: Route B (Canal Rd)   ETA: 22.0 min   (ON TIME)
+
+>> Learning Agent
+     learned estimate Route A (Main Blvd): 11.2 min (2.80 min/km)
+     learned estimate Route B (Canal Rd): 12.0 min (2.00 min/km)
+   Best known route: Route A (Main Blvd)
+   FEEDBACK: expected 11.2 min, actual 11.2 min
+   Updated ('normal', 'clear') -> 2.80 min/km
+   Actions: Accept order ORD-101 | Pick up food | Ride via Route A (Main Blvd) | Deliver order | Record feedback for next time
+   Route: Route A (Main Blvd)   ETA: 21.2 min   (ON TIME)
+
+>> Hierarchical Agent
+   TOP GOAL: Deliver order ORD-101
+     [1] accept_order: order accepted
+     [2] choose_route: Route A (Main Blvd) (10.9 min ride)
+     [3] pick_up_food: wait 10 min at restaurant
+     [4] deliver_order: leave restaurant, follow Route A, reach customer
+     [5] confirm_delivery: on time (20.9/40 min), ask for rating
+   Actions: t=0m  Accept order | t=0m  Plan route -> Route A (Main Blvd) | t=10m  Pick up food | t=21m  Deliver order | t=21m  Confirm delivery
+   Route: Route A (Main Blvd)   ETA: 20.9 min   (ON TIME)
+
+>> Contextual Agent
+   CONTEXT: {'rush_hour': False, 'raining': False, 'urgent': False, 'food_type': 'hot', 'note': 'Leave at the gate', 'vehicle': 'bike'}
+     normal order -> balance time and toll
+   Actions: Accept order ORD-101 | Use insulated hot bag | Pick up food | Ride via Route A (Main Blvd) | Customer note: Leave at the gate | Deliver order
+   Route: Route A (Main Blvd)   ETA: 20.9 min   (ON TIME)
+
+======================================================================
+Case 2: Heavy traffic, multiple routes
+--------------------------------------
+Order ORD-102: Large pizza, 1.5L drink | prep 15m | deadline 40m | weather cloudy | urgent False | evening rush
+   Route A (Main Blvd): 4.0 km, heavy traffic, ~24.0 min 
+   Route B (Canal Rd): 6.5 km, light traffic, ~13.0 min 
+   Route C (Ring Rd): 5.0 km, normal traffic, ~13.6 min toll Rs60
+
+>> Simple Reflex Agent
+   RULE: traffic on Route A (Main Blvd) is heavy -> switch to Route B (Canal Rd)
+   Actions: Pick up order ORD-102 | Ride via Route B (Canal Rd) | Hand over order
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+>> Model-Based Reflex Agent
+   STATE: weather=cloudy, status=accepted, last route=Route A (Main Blvd)
+   STATE: traffic model = {'Route A (Main Blvd)': 'heavy', 'Route B (Canal Rd)': 'light', 'Route C (Ring Rd)': 'normal'}
+   RULE: choose Route B (Canal Rd) (first road not jammed in model)
+   Actions: Accept order ORD-102 | Pick up food (status: picked_up) | Ride via Route B (Canal Rd) | Deliver (status: delivered)
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+>> Goal-Based Agent
+   GOAL: deliver ORD-102 within 40 min
+     predict Route A (Main Blvd): arrive in 39.0 min -> goal met
+   Selected Route A (Main Blvd) because it achieves the goal
+   Actions: Accept order ORD-102 | Pick up food | Ride via Route A (Main Blvd) | Deliver order
+   Route: Route A (Main Blvd)   ETA: 39.0 min   (ON TIME)
+
+>> Utility-Based Agent
+   weights: {'time': 0.45, 'distance': 0.15, 'traffic': 0.2, 'cost': 0.2}
+     Route A (Main Blvd): time=39.0m dist=4.0km traffic=heavy cost=Rs48 -> U=0.4
+     Route B (Canal Rd): time=28.0m dist=6.5km traffic=light cost=Rs78 -> U=0.615
+     Route C (Ring Rd): time=28.6m dist=5.0km traffic=normal cost=Rs120 -> U=0.524
+   Best utility: Route B (Canal Rd) (U=0.615)
+   Actions: Accept order ORD-102 | Pick up food | Ride via Route B (Canal Rd) | Deliver order
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+>> Learning Agent
+     learned estimate Route A (Main Blvd): 14.0 min (3.50 min/km)
+     learned estimate Route B (Canal Rd): 13.0 min (2.00 min/km)
+     learned estimate Route C (Ring Rd): 14.0 min (2.80 min/km)
+   Best known route: Route B (Canal Rd)
+   FEEDBACK: expected 13.0 min, actual 13.1 min
+   Updated ('light', 'clear') -> 2.00 min/km
+   Actions: Accept order ORD-102 | Pick up food | Ride via Route B (Canal Rd) | Deliver order | Record feedback for next time
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+>> Hierarchical Agent
+   TOP GOAL: Deliver order ORD-102
+     [1] accept_order: order accepted
+     [2] choose_route: Route B (Canal Rd) (13.0 min ride)
+     [3] pick_up_food: wait 15 min at restaurant
+     [4] deliver_order: leave restaurant, follow Route B, reach customer
+     [5] confirm_delivery: on time (28.0/40 min), ask for rating
+   Actions: t=0m  Accept order | t=0m  Plan route -> Route B (Canal Rd) | t=15m  Pick up food | t=28m  Deliver order | t=28m  Confirm delivery
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+>> Contextual Agent
+   CONTEXT: {'rush_hour': True, 'raining': False, 'urgent': False, 'food_type': 'hot', 'note': '', 'vehicle': 'bike'}
+     rush hour -> add 20% buffer to heavy/normal roads
+     normal order -> balance time and toll
+   Actions: Accept order ORD-102 | Use insulated hot bag | Pick up food | Ride via Route B (Canal Rd) | Deliver order
+   Route: Route B (Canal Rd)   ETA: 28.0 min   (ON TIME)
+
+======================================================================
+Case 3: Heavy traffic, rain, urgent
+-----------------------------------
+Order ORD-103: Biryani + ice cream | prep 8m | deadline 30m | weather rain | urgent True | evening rush
+   Route A (Main Blvd): 4.0 km, heavy traffic, ~32.0 min 
+   Route C (Underpass): 5.0 km, normal traffic, ~18.2 min flood prone
+   Route B (Canal Rd): 6.0 km, light traffic, ~16.0 min 
+
+>> Simple Reflex Agent
+   RULE: traffic on Route A (Main Blvd) is heavy -> switch to Route C (Underpass)
+   RULE: it is raining -> ride slowly, cover food bag
+   RULE: order is urgent -> priority delivery
+   Actions: Pick up order ORD-103 | Cover food bag and ride slowly | Mark as priority | Ride via Route C (Underpass) | Hand over order
+   Route: Route C (Underpass)   ETA: 26.2 min   (ON TIME)
+
+>> Model-Based Reflex Agent
+   STATE: weather=rain, status=accepted, last route=Route B (Canal Rd)
+   STATE: traffic model = {'Route A (Main Blvd)': 'jam', 'Route B (Canal Rd)': 'light', 'Route C (Ring Rd)': 'normal', 'Route C (Underpass)': 'normal'}
+   RULE: rain in state -> only keep light-traffic roads
+   RULE: Route B (Canal Rd) still fine -> keep current route
+   Actions: Accept order ORD-103 | Pick up food (status: picked_up) | Cover food bag, ride slowly | Ride via Route B (Canal Rd) | Deliver (status: delivered)
+   Route: Route B (Canal Rd)   ETA: 24.0 min   (ON TIME)
+
+>> Goal-Based Agent
+   GOAL: deliver ORD-103 within 30 min
+     predict Route A (Main Blvd): arrive in 40.0 min -> goal NOT met
+     predict Route C (Underpass): arrive in 26.2 min -> goal met
+   Selected Route C (Underpass) because it achieves the goal
+   Actions: Accept order ORD-103 | Pick up food | Ride via Route C (Underpass) | Deliver order
+   Route: Route C (Underpass)   ETA: 26.2 min   (ON TIME)
+
+>> Utility-Based Agent
+   Urgent order -> weights shifted towards time
+   weights: {'time': 0.65, 'distance': 0.1, 'traffic': 0.15, 'cost': 0.1}
+     Route A (Main Blvd): time=40.0m dist=4.0km traffic=heavy cost=Rs48 -> U=-0.092
+     Route C (Underpass): time=26.2m dist=5.0km traffic=normal cost=Rs60 -> U=0.492
+     Route B (Canal Rd): time=24.0m dist=6.0km traffic=light cost=Rs72 -> U=0.557
+   Best utility: Route B (Canal Rd) (U=0.557)
+   Actions: Accept order ORD-103 | Pick up food | Ride via Route B (Canal Rd) | Deliver order
+   Route: Route B (Canal Rd)   ETA: 24.0 min   (ON TIME)
+
+>> Learning Agent
+     learned estimate Route A (Main Blvd): 18.0 min (4.50 min/km)
+     learned estimate Route C (Underpass): 18.0 min (3.60 min/km)
+     learned estimate Route B (Canal Rd): 16.2 min (2.70 min/km)
+   Best known route: Route B (Canal Rd)
+   FEEDBACK: expected 16.2 min, actual 16.6 min
+   Updated ('light', 'rain') -> 2.72 min/km
+   Actions: Accept order ORD-103 | Pick up food | Ride via Route B (Canal Rd) | Deliver order | Record feedback for next time
+   Route: Route B (Canal Rd)   ETA: 24.2 min   (ON TIME)
+
+>> Hierarchical Agent
+   TOP GOAL: Deliver order ORD-103
+     [1] accept_order: order accepted
+     [2] choose_route: Route B (Canal Rd) (16.0 min ride)
+     [3] pick_up_food: wait 8 min at restaurant
+     [4] deliver_order: leave restaurant, put on rain cover, follow Route B, no stops (urgent), reach customer
+     [5] confirm_delivery: on time (24.0/30 min), ask for rating
+   Actions: t=0m  Accept order | t=0m  Plan route -> Route B (Canal Rd) | t=8m  Pick up food | t=24m  Deliver order | t=24m  Confirm delivery
+   Route: Route B (Canal Rd)   ETA: 24.0 min   (ON TIME)
+
+>> Contextual Agent
+   CONTEXT: {'rush_hour': True, 'raining': True, 'urgent': True, 'food_type': 'cold', 'note': 'Call on arrival, patient at home', 'vehicle': 'bike'}
+     rain -> avoid Route C (Underpass) (floods in rain)
+     rush hour -> add 20% buffer to heavy/normal roads
+     urgent/cold food -> pick fastest safe road
+   Actions: Accept order ORD-103 | Use cooler bag with ice pack | Pick up food | Wear raincoat, waterproof the bag | Ride via Route B (Canal Rd) | Customer note: Call on arrival, patient at home | Deliver order
+   Route: Route B (Canal Rd)   ETA: 24.0 min   (ON TIME)
+
+======================================================================
+
+SUMMARY
+Case    Agent               Route                    ETA  Deadline
+Case 1  Simple Reflex       Route A (Main Blvd)     20.9        40
+Case 1  Model-Based Reflex  Route A (Main Blvd)     20.9        40
+Case 1  Goal-Based          Route A (Main Blvd)     20.9        40
+Case 1  Utility-Based       Route B (Canal Rd)      22.0        40
+Case 1  Learning            Route A (Main Blvd)     21.2        40
+Case 1  Hierarchical        Route A (Main Blvd)     20.9        40
+Case 1  Contextual          Route A (Main Blvd)     20.9        40
+Case 2  Simple Reflex       Route B (Canal Rd)      28.0        40
+Case 2  Model-Based Reflex  Route B (Canal Rd)      28.0        40
+Case 2  Goal-Based          Route A (Main Blvd)     39.0        40
+Case 2  Utility-Based       Route B (Canal Rd)      28.0        40
+Case 2  Learning            Route B (Canal Rd)      28.0        40
+Case 2  Hierarchical        Route B (Canal Rd)      28.0        40
+Case 2  Contextual          Route B (Canal Rd)      28.0        40
+Case 3  Simple Reflex       Route C (Underpass)     26.2        30
+Case 3  Model-Based Reflex  Route B (Canal Rd)      24.0        30
+Case 3  Goal-Based          Route C (Underpass)     26.2        30
+Case 3  Utility-Based       Route B (Canal Rd)      24.0        30
+Case 3  Learning            Route B (Canal Rd)      24.2        30
+Case 3  Hierarchical        Route B (Canal Rd)      24.0        30
+Case 3  Contextual          Route B (Canal Rd)      24.0        30
